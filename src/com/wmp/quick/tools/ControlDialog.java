@@ -46,10 +46,11 @@ public class ControlDialog extends JDialog {
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.BOTH;
         MainFrame.tools.forEach(tools -> {
-            choiceToolName = tools.name;
+
             JButton button = new JButton(tools.name);
             button.setFont(UIManager.getFont("h2.font"));
             button.addActionListener(e -> {
+                choiceToolName = tools.name;
                 nameLabel.setText("名称：" + tools.name);
                 versionLabel.setText("版本：" + tools.version);
             });
