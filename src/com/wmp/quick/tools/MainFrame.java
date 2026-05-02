@@ -83,6 +83,7 @@ public class MainFrame extends JDialog{
                     tools.add(tool);
                 } catch (Exception e) {
                     Logger.error(e, "加载工具{}失败", toolFile.getName());
+                    JOptionPane.showMessageDialog(null, "加载工具" + toolFile.getName() + "失败\n" + e, "错误", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }else Logger.warn("没有找到工具");
@@ -106,16 +107,31 @@ public class MainFrame extends JDialog{
             popupMenu.add(menuItem);
         });
 
-        JMenuItem menuItem = new JMenuItem("刷新");
-        menuItem.setFont(UIManager.getFont("h0.font"));
-        menuItem.addActionListener(_ -> {
+        JMenu moreMenu = new JMenu("更多");
+        moreMenu.setFont(UIManager.getFont("h0.font"));
+
+        JMenuItem controlToolsItem = new JMenuItem("工具管理");
+        controlToolsItem.setFont(UIManager.getFont("h1.font"));
+        controlToolsItem.addActionListener(e -> new ControlDialog());
+        moreMenu.add(controlToolsItem);
+
+        JMenuItem refreshMenuItem = new JMenuItem("刷新");
+        refreshMenuItem.setFont(UIManager.getFont("h1.font"));
+        refreshMenuItem.addActionListener(e -> {
             try {
                 loadTools();
-            } catch (URISyntaxException e) {
-                Logger.error(e, "刷新工具失败");
+            } catch (URISyntaxException ex) {
+                throw new RuntimeException(ex);
             }
         });
-        popupMenu.add(menuItem);
+        moreMenu.add(refreshMenuItem);
+
+        JMenuItem aboutMenuItem = new JMenuItem("关于");
+        aboutMenuItem.setFont(UIManager.getFont("h1.font"));
+        aboutMenuItem.addActionListener(e -> new AboutDialog());
+        moreMenu.add(aboutMenuItem);
+
+        popupMenu.add(moreMenu);
 
         if(style == 0) popupMenu.show(oldClass.get(0), -popupMenu.getWidth() - oldClass.get(0).getWidth(), 0);
         else if (style == 1)popupMenu.show(oldClass.get(1), oldClass.get(1).getWidth(), 0);
@@ -138,17 +154,5 @@ public class MainFrame extends JDialog{
         });
     }
 
-    static void main(){
-        Logger.info("启动快捷工具");
 
-        FlatMacLightLaf.setup();
-
-        SwingUtilities.invokeLater(()-> {
-            try {
-                new MainFrame();
-            } catch (URISyntaxException e) {
-                Logger.error(e, "启动快捷工具失败");
-            }
-        });
-    }
 }

@@ -24,6 +24,11 @@ public class Main extends QToolUnit {
         return null;
     }
 
+    @Override
+    protected String setVersion() {
+        return "1.0";
+    }
+
     private static final String infoRegular = "源语言：%s 目标语言：%s 其他：%s";
     private static final String tipsRegular = "错误码：%s 错误信息：%s";
 
@@ -44,6 +49,10 @@ public class Main extends QToolUnit {
                 file.createNewFile();
             }
             List<String> api = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+            if (api.size() != 2) {
+                JOptionPane.showMessageDialog(null, "请将API密钥和应用ID填写到inf/translate.inf文件中");
+                return;
+            }
             String apikey = api.get(0);//在'控制台->API应用'中查看
             String appId = api.get(1);//应用唯一标识,在'控制台->API应用'中查看
             GetTranslate.setAPIKey(apikey, appId);
