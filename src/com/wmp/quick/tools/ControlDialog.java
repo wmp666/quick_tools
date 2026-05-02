@@ -19,6 +19,18 @@ public class ControlDialog extends JDialog {
         setTitle("管理页");
         setLayout(new BorderLayout());
 
+        initInfoAndToolPanel();
+
+        initFunctionPanel();
+
+        initOpenFilePanel();
+
+        this.pack();
+        this.setLocationRelativeTo(null);
+        this.setVisible(true);
+    }
+
+    private void initInfoAndToolPanel() {
         JPanel infoPanel = new JPanel(new GridLayout(0,1));
         infoPanel.setBorder(BorderFactory.createTitledBorder("工具信息"));
         nameLabel.setFont(UIManager.getFont("h2.font"));
@@ -58,14 +70,30 @@ public class ControlDialog extends JDialog {
         });
         toolsPanel.add(addButton, gbc);
 
-        this.add(toolsPanel, BorderLayout.CENTER);
+        this.add(new JScrollPane(toolsPanel), BorderLayout.CENTER);
+    }
 
+    private void initFunctionPanel() {
+        JPanel functionPanel = new JPanel(new GridBagLayout());
+        functionPanel.setBorder(BorderFactory.createTitledBorder("功能"));
 
-        initOpenFilePanel();
+        JButton openSetsButton = new JButton("设置");
+        openSetsButton.setFont(UIManager.getFont("h2.font"));
+        openSetsButton.addActionListener(e -> {
+            MainFrame.tools.forEach(tools -> {
+                if (tools.name.equals(choiceToolName)) {
+                    tools.showSetsDialog();
+                }
+            });
+        });
 
-        this.pack();
-        this.setLocationRelativeTo(null);
-        this.setVisible(true);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        functionPanel.add(openSetsButton, gbc);
+
+        this.add(functionPanel, BorderLayout.EAST);
     }
 
     private void initOpenFilePanel() {

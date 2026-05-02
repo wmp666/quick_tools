@@ -17,6 +17,7 @@ public abstract class QToolUnit {
     }
     protected abstract String setVersion();
 
+    public abstract void showSetsDialog();
 
     public abstract void showTool();
 

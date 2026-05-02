@@ -13,6 +13,7 @@ import java.awt.geom.RoundRectangle2D;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -78,9 +79,48 @@ public class MainFrame extends JDialog{
                 try {
                     URLClassLoader classLoader = new URLClassLoader(new URL[]{toolFile.toURI().toURL()});
                     Class<?> toolClass = classLoader.loadClass("com.wmp.tool.Main");
+                    Object tool = toolClass.getDeclaredConstructor().newInstance();
+                    QToolUnit toolUnit = new QToolUnit() {
+                        @Override
+                        protected String setName() {
+                            try {
+                                return toolClass.getField("name").get(tool).toString();
+                            } catch (Exception _) {
+                                return "未知";
+                            }
+                        }
 
-                    QToolUnit tool = (QToolUnit) toolClass.getDeclaredConstructor().newInstance();
-                    tools.add(tool);
+                        @Override
+                        protected String setVersion() {
+                            try {
+                                return toolClass.getField("version").get(tool).toString();
+                            } catch (Exception _) {
+                                return "0.0";
+                            }
+                        }
+
+                        @Override
+                        public void showSetsDialog() {
+                            try {
+                                toolClass.getMethod("showSetsDialog").invoke(tool);
+                            } catch (Exception e) {
+                                Logger.warn(e, "工具{}加载异常，引用的开发库可能存在兼容问题", toolFile.getName());
+                                JOptionPane.showMessageDialog(null, "发生错误");
+                            }
+                        }
+
+                        @Override
+                        public void showTool() {
+                            try {
+                                toolClass.getMethod("showTool").invoke(tool);
+                            } catch (Exception e) {
+                                Logger.warn(e, "工具{}加载异常，引用的开发库可能存在兼容问题", toolFile.getName());
+                                JOptionPane.showMessageDialog(null, "发生错误");
+                            }
+                        }
+                    };
+
+                    tools.add(toolUnit);
                 } catch (Exception e) {
                     Logger.error(e, "加载工具{}失败", toolFile.getName());
                     JOptionPane.showMessageDialog(null, "加载工具" + toolFile.getName() + "失败\n" + e, "错误", JOptionPane.ERROR_MESSAGE);
@@ -130,6 +170,7 @@ public class MainFrame extends JDialog{
         aboutMenuItem.setFont(UIManager.getFont("h1.font"));
         aboutMenuItem.addActionListener(e -> new AboutDialog());
         moreMenu.add(aboutMenuItem);
+
 
         popupMenu.add(moreMenu);
 

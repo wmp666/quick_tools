@@ -29,6 +29,11 @@ public class Main extends QToolUnit {
         return "1.0";
     }
 
+    @Override
+    public void showSetsDialog() {
+
+    }
+
     private static final String infoRegular = "源语言：%s 目标语言：%s 其他：%s";
     private static final String tipsRegular = "错误码：%s 错误信息：%s";
 
