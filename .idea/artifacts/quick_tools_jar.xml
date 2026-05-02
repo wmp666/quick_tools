@@ -1,0 +1,15 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="quick_tools:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/quick_tools_jar</output-path>
+    <root id="archive" name="quick_tools.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="develop_tool" />
+      <element id="module-output" name="quick_tools" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/tinylog/tinylog-api-2.7.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/tinylog/tinylog-impl-2.7.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/flatlaf/flatlaf-3.7.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
