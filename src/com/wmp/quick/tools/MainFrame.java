@@ -112,11 +112,88 @@ public class MainFrame extends JDialog{
                         @Override
                         public void showTool() {
                             try {
-                                toolClass.getMethod("showTool").invoke(tool);
+
+                                JDialog toolDialog = (JDialog) toolClass.getMethod("getToolDialog").invoke(tool);
+                                boolean isAdd  =false;
+                                //有现成的JMenuBar
+                                if (toolDialog.getJMenuBar()!=null) {
+                                    JMenuBar jMenuBar = toolDialog.getJMenuBar();
+                                    //判断是否有现成的JMenu
+                                    for (Component component : jMenuBar.getComponents()) {
+                                        if (component instanceof JMenu menu) {
+                                            if (menu.getText().equals("软件")) {
+                                                JCheckBoxMenuItem alwaysTop = new JCheckBoxMenuItem("置顶");
+                                                alwaysTop.addActionListener(e1 -> {
+                                                    toolDialog.setAlwaysOnTop(alwaysTop.isSelected());
+                                                });
+                                                alwaysTop.setSelected(true);
+                                                isAdd = true;
+                                            }
+                                        }
+                                    }
+                                    //没有现成的JMenu
+                                    if (!isAdd) {
+                                        JMenu appMenu = new JMenu("软件");
+                                        JCheckBoxMenuItem alwaysTop = new JCheckBoxMenuItem("置顶");
+                                        alwaysTop.addActionListener(e1 -> {
+                                            toolDialog.setAlwaysOnTop(alwaysTop.isSelected());
+                                        });
+                                        alwaysTop.setSelected(true);
+                                        appMenu.add(alwaysTop);
+                                        jMenuBar.add(appMenu);
+                                        isAdd = true;
+                                    }
+                                }else{
+                                    //没有现成的JMenuBar
+                                    JMenuBar jMenuBar = new JMenuBar();
+                                    JMenu appMenu = new JMenu("软件");
+                                    JCheckBoxMenuItem alwaysTop = new JCheckBoxMenuItem("置顶");
+                                    alwaysTop.addActionListener(e1 -> {
+                                        toolDialog.setAlwaysOnTop(alwaysTop.isSelected());
+                                    });
+                                    alwaysTop.setSelected(true);
+                                    appMenu.add(alwaysTop);
+                                    jMenuBar.add(appMenu);
+                                    toolDialog.setJMenuBar(jMenuBar);
+                                    isAdd = true;
+
+                                }
+                                Logger.info("置顶添加状态：{}", isAdd);
+
+                                Dimension preferredSize = toolDialog.getPreferredSize();
+                                if (!(preferredSize.width > 500 || preferredSize.height > 300)) {
+                                    toolDialog.setSize(Math.max(preferredSize.width, 500), Math.max(preferredSize.height, 300));
+                                }
+
+                                toolDialog.setAlwaysOnTop(true);
+                                toolDialog.setLocationRelativeTo(null);
+                                toolDialog.setVisible(true);
                             } catch (Exception e) {
+                                //没有getToolDialog
+                                Logger.warn(e, "工具{}加载异常，引用的开发库可能存在兼容问题", toolFile.getName());
+
+                                try {
+                                    toolClass.getMethod("showTool").invoke(tool);
+                                } catch (Exception ex) {
+                                    Logger.warn(ex, "工具{}加载异常，引用的开发库可能存在兼容问题", toolFile.getName());
+                                    JOptionPane.showMessageDialog(null, "发生错误");
+                                }
+                            }
+
+                        }
+
+                        @Override
+                        public JDialog getToolDialog() {
+                            try {
+                                return (JDialog) toolClass.getMethod("getToolDialog").invoke(tool);
+                            } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                                 Logger.warn(e, "工具{}加载异常，引用的开发库可能存在兼容问题", toolFile.getName());
                                 JOptionPane.showMessageDialog(null, "发生错误");
                             }
+                            JDialog error = new JDialog();
+                            error.setTitle("错误");
+                            error.add(new JLabel("加载工具" + toolFile.getName() + "失败"));
+                            return error;
                         }
                     };
 
@@ -159,8 +236,9 @@ public class MainFrame extends JDialog{
         refreshMenuItem.setFont(UIManager.getFont("h1.font"));
         refreshMenuItem.addActionListener(e -> {
             try {
-                loadTools();
-            } catch (URISyntaxException ex) {
+                oldClass.forEach(Window::dispose);
+                new MainFrame();
+            } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
         });

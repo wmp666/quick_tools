@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Main-Class: 
-Class-Path: flatlaf-3.7.jar tinylog-api-2.7.0.jar
-

@@ -19,6 +19,13 @@ public abstract class QToolUnit {
 
     public abstract void showSetsDialog();
 
-    public abstract void showTool();
+    /**
+     * 展示工具
+     * @deprecated 建议使用新方法{@code getToolDialog}
+     * @see #getToolDialog()
+     */
+    @Deprecated
+    public void showTool(){}
 
+    public abstract JDialog getToolDialog();
 }
