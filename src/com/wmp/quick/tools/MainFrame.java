@@ -1,5 +1,7 @@
 package com.wmp.quick.tools;
 
+import com.formdev.flatlaf.*;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.wmp.develop.tool.QToolUnit;
 import com.wmp.quick.tools.apptools.GetPath;
@@ -19,13 +21,21 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.prefs.Preferences;
 
 public class MainFrame extends JDialog{
     private static final ArrayList<MainFrame> oldClass = new ArrayList<>();
     public static final ArrayList<QToolUnit> tools = new ArrayList<>();
 
+    private static final Preferences prefs = Preferences.userNodeForPackage(MainFrame.class);
+    private static final String THEME_KEY = "selected_theme";
+    private static final String DEFAULT_THEME = "Mac样式浅色";
+
 
     public MainFrame() throws URISyntaxException {
+        loadThemePreference();
+
         oldClass.forEach(MainFrame::dispose);
         oldClass.clear();
         new MainFrame(0);
@@ -63,6 +73,71 @@ public class MainFrame extends JDialog{
             this.setLocation(0, screenSize.height * 3 / 5);
         }
         this.setVisible(true);
+    }
+
+    private static void loadThemePreference() {
+        String savedTheme = prefs.get(THEME_KEY, DEFAULT_THEME);
+        applyThemeByName(savedTheme);
+    }
+
+    private static void applyThemeByName(String themeName) {
+        try {
+            switch (themeName) {
+                case "浅色":
+                    FlatLightLaf.setup();
+                    break;
+                case "深色":
+                    FlatDarkLaf.setup();
+                    break;
+                case "IntelliJ":
+                    FlatIntelliJLaf.setup();
+                    break;
+                case "Darcula":
+                    FlatDarculaLaf.setup();
+                    break;
+                case "Mac样式浅色":
+                    FlatMacLightLaf.setup();
+                    break;
+                case "Mac样式深色":
+                    FlatMacDarkLaf.setup();
+                    break;
+                default:
+                    FlatMacLightLaf.setup();
+            }
+        } catch (Exception e) {
+            Logger.error(e, "应用主题失败：{}", themeName);
+            //加载系统默认
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    private static void changeTheme(String themeName, ButtonGroup themeGroup) {
+        prefs.put(THEME_KEY, themeName);
+
+        SwingUtilities.invokeLater(() -> {
+            applyThemeByName(themeName);
+            updateAllFrames(themeGroup, themeName);
+        });
+    }
+
+    private static void updateAllFrames(ButtonGroup themeGroup, String selectedTheme) {
+        oldClass.forEach(frame -> {
+            SwingUtilities.updateComponentTreeUI(frame);
+            frame.repaint();
+        });
+
+        Enumeration<AbstractButton> elements = themeGroup.getElements();
+        while (elements.hasMoreElements()) {
+            AbstractButton button = elements.nextElement();
+            if (button instanceof JRadioButtonMenuItem menuItem) {
+                menuItem.setSelected(menuItem.getText().equals(selectedTheme));
+            }
+        }
+
     }
 
     private static void loadTools() throws URISyntaxException {
@@ -115,10 +190,8 @@ public class MainFrame extends JDialog{
 
                                 JDialog toolDialog = (JDialog) toolClass.getMethod("getToolDialog").invoke(tool);
                                 boolean isAdd  =false;
-                                //有现成的JMenuBar
                                 if (toolDialog.getJMenuBar()!=null) {
                                     JMenuBar jMenuBar = toolDialog.getJMenuBar();
-                                    //判断是否有现成的JMenu
                                     for (Component component : jMenuBar.getComponents()) {
                                         if (component instanceof JMenu menu) {
                                             if (menu.getText().equals("软件")) {
@@ -131,7 +204,6 @@ public class MainFrame extends JDialog{
                                             }
                                         }
                                     }
-                                    //没有现成的JMenu
                                     if (!isAdd) {
                                         JMenu appMenu = new JMenu("软件");
                                         JCheckBoxMenuItem alwaysTop = new JCheckBoxMenuItem("置顶");
@@ -144,7 +216,6 @@ public class MainFrame extends JDialog{
                                         isAdd = true;
                                     }
                                 }else{
-                                    //没有现成的JMenuBar
                                     JMenuBar jMenuBar = new JMenuBar();
                                     JMenu appMenu = new JMenu("软件");
                                     JCheckBoxMenuItem alwaysTop = new JCheckBoxMenuItem("置顶");
@@ -161,15 +232,16 @@ public class MainFrame extends JDialog{
                                 Logger.info("置顶添加状态：{}", isAdd);
 
                                 Dimension preferredSize = toolDialog.getPreferredSize();
-                                if (!(preferredSize.width > 500 || preferredSize.height > 300)) {
+                                if ((preferredSize.width < 500 || preferredSize.height < 300)) {
                                     toolDialog.setSize(Math.max(preferredSize.width, 500), Math.max(preferredSize.height, 300));
+                                }else{
+                                    toolDialog.setSize(preferredSize);
                                 }
 
                                 toolDialog.setAlwaysOnTop(true);
                                 toolDialog.setLocationRelativeTo(null);
                                 toolDialog.setVisible(true);
                             } catch (Exception e) {
-                                //没有getToolDialog
                                 Logger.warn(e, "工具{}加载异常，引用的开发库可能存在兼容问题", toolFile.getName());
 
                                 try {
@@ -244,6 +316,38 @@ public class MainFrame extends JDialog{
         });
         moreMenu.add(refreshMenuItem);
 
+        JMenu themeMenu = new JMenu("主题");
+        themeMenu.setFont(UIManager.getFont("h1.font"));
+
+        ButtonGroup themeGroup = new ButtonGroup();
+        String currentTheme = prefs.get(THEME_KEY, DEFAULT_THEME);
+
+        JRadioButtonMenuItem lightTheme = createThemeMenuItem("浅色", themeGroup, currentTheme);
+        lightTheme.addActionListener(e -> changeTheme("浅色", themeGroup));
+        themeMenu.add(lightTheme);
+
+        JRadioButtonMenuItem darkTheme = createThemeMenuItem("深色", themeGroup, currentTheme);
+        darkTheme.addActionListener(e -> changeTheme("深色", themeGroup));
+        themeMenu.add(darkTheme);
+
+        JRadioButtonMenuItem intellijTheme = createThemeMenuItem("IntelliJ", themeGroup, currentTheme);
+        intellijTheme.addActionListener(e -> changeTheme("IntelliJ", themeGroup));
+        themeMenu.add(intellijTheme);
+
+        JRadioButtonMenuItem darculaTheme = createThemeMenuItem("Darcula", themeGroup, currentTheme);
+        darculaTheme.addActionListener(e -> changeTheme("Darcula", themeGroup));
+        themeMenu.add(darculaTheme);
+
+        JRadioButtonMenuItem MacLightTheme = createThemeMenuItem("Mac样式浅色", themeGroup, currentTheme);
+        MacLightTheme.addActionListener(e -> changeTheme("Mac样式浅色", themeGroup));
+        themeMenu.add(MacLightTheme);
+
+        JRadioButtonMenuItem MacDarkTheme = createThemeMenuItem("Mac样式深色", themeGroup, currentTheme);
+        MacDarkTheme.addActionListener(e -> changeTheme("Mac样式深色", themeGroup));
+        themeMenu.add(MacDarkTheme);
+
+        moreMenu.add(themeMenu);
+
         JMenuItem aboutMenuItem = new JMenuItem("关于");
         aboutMenuItem.setFont(UIManager.getFont("h1.font"));
         aboutMenuItem.addActionListener(e -> new AboutDialog());
@@ -254,6 +358,13 @@ public class MainFrame extends JDialog{
 
         if(style == 0) popupMenu.show(oldClass.get(0), -popupMenu.getWidth() - oldClass.get(0).getWidth(), 0);
         else if (style == 1)popupMenu.show(oldClass.get(1), oldClass.get(1).getWidth(), 0);
+    }
+
+    private static JRadioButtonMenuItem createThemeMenuItem(String themeName, ButtonGroup themeGroup, String currentTheme) {
+        JRadioButtonMenuItem menuItem = new JRadioButtonMenuItem(themeName);
+        menuItem.setSelected(themeName.equals(currentTheme));
+        themeGroup.add(menuItem);
+        return menuItem;
     }
 
     private void initFrame() {
