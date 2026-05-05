@@ -6,10 +6,11 @@
 ## 下载链接
 [开发工具包](https://github.com/wmp666/quick_tools/releases/tag/0.2)
 [官方工具库](https://github.com/wmp666/quick_tools/releases/tag/0.1)
-## 示例项目（translate）
+## ~~示例项目（translate）~~
 
 > 一个放在当前仓库下的示例项目
-> 仅为示例，不更新
+> 仅为示例，不更新<br>
+> 已移除
 
 1. 在编译获得它的jar文件后，进行上述操作，便能使用
 2. 初次运行会在`app/inf`文件夹内生成`translate.inf`文件，里面需要输入翻译需要的数据
